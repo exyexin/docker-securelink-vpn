@@ -3,8 +3,9 @@ FROM archlinux:latest
 COPY securelink-3.8.13_66-1-x86_64.pkg.tar.zst /root/
 COPY services /root/services
 
-RUN pacman-key --init && pacman-key --populate archlinux && \
-	pacman -Syu fluxbox x11vnc xterm xorg-server-xvfb iproute htop vim bash-completion apparmor lsb-release procps-ng unzip gzip iptables wget curl gost tmux supervisor noto-fonts-cjk ttf-cascadia-mono-nerd \
+RUN mv /etc/pacman.d/mirrorlist{,.bak} && echo 'Server = https://mirrors.ustc.edu.cn/archlinux/$repo/os/$arch' > /etc/pacman.d/mirrorlist && \
+	pacman-key --init && pacman-key --populate archlinux && \
+	pacman -Syu fluxbox x11vnc xterm xorg-server-xvfb iproute lsb-release procps-ng iptables wget curl gost supervisor wqy-microhei ttf-cascadia-code \
 	at-spi2-core libcups gtk3 \
 	libnotify libxtst nss dmidecode \
 	--needed --noconfirm && \
@@ -13,7 +14,7 @@ RUN pacman-key --init && pacman-key --populate archlinux && \
 
 COPY app/conf.d/service /root/service
 RUN cp /root/services/* /etc/systemd/system/ 
-RUN	systemctl enable gost.service xterm.service securelink_gui.service
+RUN	systemctl enable gost.service xterm.service securelink_gui.service x11vnc.service
 # Fetch Securelink vpn
 #RUN wget https://download-sdwan.wangsu.com/public/securelink/pkg/formal/COMMON/ubuntuX64/SecureLink-ubuntu-x64-3.8.13-66.deb
 
@@ -40,5 +41,4 @@ WORKDIR /root
 #EXPOSE 10801
 #EXPOSE 18888
 
-#COPY app /app
 CMD ["/lib/systemd/systemd"]
