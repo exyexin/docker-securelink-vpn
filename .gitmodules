@@ -1,0 +1,3 @@
+[submodule "securelink"]
+	path = securelink
+	url = https://github.com/exyexin/securelink
