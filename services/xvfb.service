@@ -1,0 +1,32 @@
+[Unit]
+Description=Virtual X11 Display Server (Xvfb)
+# 确保网络准备好后再启动（因为用了 -listen tcp）
+After=network.target
+
+[Service]
+Type=simple
+
+# --- 环境变量设置 ---
+# Systemd 无法像 Supervisor 那样直接继承 shell 环境变量
+# 你必须在这里设定默认值，或者使用 EnvironmentFile 加载文件
+Environment="DISPLAY_WIDTH=1024"
+Environment="DISPLAY_HEIGHT=768"
+
+# 如果你想从文件加载环境变量（可选）
+# EnvironmentFile=/etc/default/xvfb
+
+# --- 启动命令 ---
+# 注意：
+# 1. 必须使用绝对路径 /usr/bin/Xvfb (可以用 `which Xvfb` 确认路径)
+# 2. 变量写法变为 ${VAR_NAME}
+ExecStart=/usr/bin/Xvfb :0 -screen 0 ${DISPLAY_WIDTH}x${DISPLAY_HEIGHT}x24 -listen tcp -ac
+
+# --- 重启策略 ---
+# 对应 supervisor 的 autorestart=true
+Restart=always
+# 重启间隔（防止无限快速重启）
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+

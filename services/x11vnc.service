@@ -1,0 +1,28 @@
+[Unit]
+Description=X11VNC Server
+After=network.target
+# --- 关键：确保在 fluxbox 之后启动 ---
+# 假设你已经创建了名为 fluxbox.service 的服务
+After=fluxbox.service
+# 如果 fluxbox 没启动，x11vnc 也不会启动（强依赖）
+Requires=fluxbox.service
+
+[Service]
+Type=simple
+
+# --- 环境变量 (非常重要) ---
+# Systemd 默认没有 DISPLAY 变量，必须手动指定
+Environment=DISPLAY=:0
+
+# --- 启动命令 ---
+# 建议加上 -auth guess 以自动寻找 Xauthority 文件
+# 确保使用绝对路径 (通常是 /usr/sbin/x11vnc)
+ExecStart=/usr/sbin/x11vnc -display :0 -forever -shared 
+
+# 对应 autorestart=true
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+

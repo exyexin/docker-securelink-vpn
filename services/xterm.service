@@ -1,0 +1,31 @@
+[Unit]
+Description=XTerm Terminal Emulator
+# 确保在 Fluxbox 启动后再启动 xterm
+# 这样 xterm 窗口才会被 Fluxbox 管理（有标题栏、能拖动）
+After=fluxbox.service
+Requires=fluxbox.service
+
+[Service]
+Type=simple
+
+# --- 环境变量 (必须) ---
+# 告诉 xterm 显示在哪个屏幕上，通常是 :0
+Environment=DISPLAY=:0
+
+# --- 启动命令 ---
+# 1. 必须使用绝对路径 (可用 `which xterm` 查看)
+# 2. 可以添加参数，例如:
+#    -ls (登录shell)
+#    -geometry 80x24+10+10 (设置窗口大小和位置)
+#    -bg black -fg white (设置颜色)
+ExecStart=/usr/sbin/xterm
+
+# --- 重启策略 ---
+# 对应 autorestart=true
+# 如果你在 VNC 里关闭了 xterm 窗口，systemd 会立刻自动帮你重新打开一个
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+

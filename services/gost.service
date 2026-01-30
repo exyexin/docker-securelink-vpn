@@ -1,0 +1,17 @@
+[Unit]
+Description=GOST Tunnel Service
+# 确保网络完全启动后再运行
+After=network.target
+
+[Service]
+Type=simple
+# 使用你提供的路径和参数
+ExecStart=/usr/sbin/gost -L socks5://:10801 -L http://:18888
+# 对应 autorestart=true
+Restart=always
+# 避免疯狂重启，设置 5 秒间隔
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+
