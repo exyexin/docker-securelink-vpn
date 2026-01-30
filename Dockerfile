@@ -1,15 +1,20 @@
 FROM archlinux:latest
 
-COPY securelink-3.8.13_66-1-x86_64.pkg.tar.zst /root/
+#COPY securelink-3.8.13_66-1-x86_64.pkg.tar.zst /root/
 COPY services /root/services
+COPY securelink /root/securelink
 
 RUN pacman-key --init && pacman-key --populate archlinux && \
-	pacman -Syu fluxbox x11vnc xterm xorg-server-xvfb iproute htop vim bash-completion apparmor lsb-release procps-ng unzip gzip iptables wget curl gost tmux supervisor noto-fonts-cjk ttf-cascadia-mono-nerd \
-	at-spi2-core libcups gtk3 \
+	pacman -Syu git fluxbox x11vnc xterm xorg-server-xvfb iproute apparmor lsb-release procps-ng unzip gzip iptables wget curl gost supervisor noto-fonts-cjk ttf-cascadia-mono-nerd \
+	at-spi2-core libcups gtk3 base-devel\
 	libnotify libxtst nss dmidecode \
-	--needed --noconfirm && \
-	pacman -U /root/securelink-3.8.13_66-1-x86_64.pkg.tar.zst --noconfirm && \
-	rm -rf /var/cache/pacman/ \
+	--needed --noconfirm 
+
+#RUN	pacman -U /root/securelink-3.8.13_66-1-x86_64.pkg.tar.zst --noconfirm && \
+RUN cd securelink && makepkg -s --noconfirm && \
+	pacman -U ./securelink-3.8.13_66-1-x86_64.pkg.tar.zst --noconfirm && \
+	pacman -Rs base-devel git --noconfirm && \
+	rm -rf /var/cache/pacman/ /root/securelink\
 
 COPY app/conf.d/service /root/service
 RUN cp /root/services/* /etc/systemd/system/ 
