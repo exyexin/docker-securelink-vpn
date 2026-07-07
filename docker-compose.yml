@@ -1,0 +1,32 @@
+services:
+  svpn:
+    image: exyexin/docker-securelink-vpn:latest
+    # image: svpn:latest  # 本地构建时使用此项
+    container_name: svpn
+    entrypoint: /lib/systemd/systemd
+    cap_add:
+      - SYS_ADMIN
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    volumes:
+      - /sys/fs/cgroup/:/sys/fs/cgroup/:ro
+      - svpn_config:/root/.config
+      - svpn_data:/opt/SecureLink/resources/app.asar.unpacked/assets/app-ext/securelink_linux64/config
+    ports:
+      - "5902:5900"   # VNC
+      - "10802:10801" # SOCKS5 proxy
+      - "18889:18888" # HTTP proxy
+    restart: unless-stopped
+    environment:
+      - HOME=/root
+      - USER=root
+      - DISPLAY=:0.0
+      - DISPLAY_WIDTH=1024
+      - DISPLAY_HEIGHT=768
+      - RUN_XTERM=yes
+      - RUN_FLUXBOX=yes
+
+volumes:
+  svpn_config:
+  svpn_data:
