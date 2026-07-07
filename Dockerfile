@@ -10,11 +10,9 @@ RUN mv /etc/pacman.d/mirrorlist{,.bak} && echo 'Server = https://mirrors.ustc.ed
 	libnotify libxtst nss dmidecode \
 	--needed --noconfirm && \
 	pacman -U /root/securelink-3.8.13_66-1-x86_64.pkg.tar.zst --noconfirm && \
-	rm -rf /var/cache/pacman/ \
-
-COPY app/conf.d/service /root/service
+	rm -rf /var/cache/pacman/pkg
 RUN cp /root/services/* /etc/systemd/system/ 
-RUN	systemctl enable gost.service xterm.service securelink_gui.service x11vnc.service
+RUN	systemctl enable gost.service xterm.service securelink.service securelink_gui.service xvfb.service x11vnc.service
 # Fetch Securelink vpn
 #RUN wget https://download-sdwan.wangsu.com/public/securelink/pkg/formal/COMMON/ubuntuX64/SecureLink-ubuntu-x64-3.8.13-66.deb
 
