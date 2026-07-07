@@ -1,0 +1,60 @@
+FROM debian:bookworm-slim
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install systemd as PID 1
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends systemd systemd-sysv && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install runtime dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    fluxbox x11vnc xterm xvfb \
+    iproute2 lsb-release procps iptables wget curl \
+    fonts-wqy-microhei \
+    at-spi2-core libcups2 libgtk-3-0 \
+    libnotify4 libxtst6 libnss3 dmidecode libgbm1 \
+    libasound2 libappindicator3-1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install gost (not in Debian repos, download from GitHub)
+# If GitHub is unreachable, skip gost (proxy tunnel is optional)
+RUN curl -sL --retry 3 --connect-timeout 10 \
+    -o /tmp/gost.tar.gz \
+    "https://github.com/go-gost/gost/releases/download/v3.2.6/gost_3.2.6_linux_amd64.tar.gz" && \
+    tar xzf /tmp/gost.tar.gz -C /usr/bin/ gost && \
+    chmod +x /usr/bin/gost && \
+    rm /tmp/gost.tar.gz || \
+    echo "WARNING: gost download failed, skipping (proxy tunnel unavailable)"
+
+# Symlink binary paths for compatibility with existing service files
+RUN ln -s /usr/bin/fluxbox /usr/sbin/fluxbox && \
+    ln -s /usr/bin/x11vnc /usr/sbin/x11vnc && \
+    ln -s /usr/bin/xterm /usr/sbin/xterm && \
+    (ln -s /usr/bin/gost /usr/sbin/gost 2>/dev/null || true)
+
+# Install SecureLink from repackaged .deb
+COPY securelink/securelink_3.8.13-66_amd64.deb /root/
+RUN dpkg -i /root/securelink_3.8.13-66_amd64.deb 2>&1 || true && \
+    rm /root/securelink_3.8.13-66_amd64.deb
+
+# Override vendor service files with custom ones
+COPY services /root/services
+RUN cp /root/services/* /etc/systemd/system/
+
+# Enable all services (gost.service may not exist if download failed)
+RUN systemctl enable gost.service xterm.service securelink.service securelink_gui.service xvfb.service x11vnc.service 2>&1 || true
+
+# Setup environment
+ENV HOME=/root \
+    USER=root \
+    DISPLAY=:0.0 \
+    DISPLAY_WIDTH=1024 \
+    DISPLAY_HEIGHT=768 \
+    RUN_XTERM=yes \
+    RUN_FLUXBOX=yes
+
+WORKDIR /root
+
+CMD ["/lib/systemd/systemd"]

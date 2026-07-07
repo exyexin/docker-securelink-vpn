@@ -1,7 +1,9 @@
 services:
   svpn:
     image: exyexin/docker-securelink-vpn:latest
-    # image: svpn:latest  # 本地构建时使用此项
+    # Use one of the following for local builds:
+    # image: svpn:latest            # Arch Linux (Dockerfile)
+    # image: svpn-debian:latest     # Debian (Dockerfile.debian)
     container_name: svpn
     entrypoint: /lib/systemd/systemd
     cap_add:

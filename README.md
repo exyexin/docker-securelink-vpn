@@ -1,6 +1,6 @@
 # Docker SecureLink VPN
 
-基于 Arch Linux 的 SecureLink VPN 容器化部署，提供 X11/VNC 桌面环境用于 GUI 交互。
+基于 Docker 的 SecureLink VPN 容器化部署，提供 X11/VNC 桌面环境用于 GUI 交互。支持 **Arch Linux** 和 **Debian** 两种基础镜像。
 
 ## 快速启动
 
@@ -12,13 +12,9 @@ cd docker-securelink-vpn
 docker compose up -d
 ```
 
-使用 DockerHub 镜像（无需本地构建，需修改 `docker-compose.yml` 中的 `image` 字段）：
-
-```yaml
-image: exyexin/docker-securelink-vpn:latest
-```
-
 ### 手动构建
+
+**Arch Linux 版本**（默认 `Dockerfile`）：
 
 ```bash
 cd securelink && makepkg
@@ -27,7 +23,24 @@ podman build -t svpn .
 bash ./run.sh <container_name>
 ```
 
-> 初次启动可能需要选择 timezone，之后即可正常使用。
+**Debian 版本**（`Dockerfile.debian`）：
+
+```bash
+# 先重新打包 .deb（替换原始 postinst）
+cd securelink && bash repack.sh && cd ..
+
+# 构建（需要代理时用 add_proxy）
+add_proxy podman build --network host -f Dockerfile.debian -t svpn-debian .
+
+podman run -d --name svpn \
+    --cap-add SYS_ADMIN --cap-add NET_ADMIN \
+    --device /dev/net/tun \
+    -v /sys/fs/cgroup/:/sys/fs/cgroup/:ro \
+    -p 5902:5900 -p 10802:10801 -p 18889:18888 \
+    svpn-debian
+```
+
+> 初次启动可能需要选择 timezone（Debian 版本默认跳过交互）。
 
 ## 连接
 
@@ -61,7 +74,30 @@ VNC 连接：`localhost:5902`
 | `x11vnc.service` | VNC 服务 |
 | `gost.service` | SOCKS5/HTTP 代理隧道 |
 
-配置数据存储在 `/root/.config/securelink/`，容器重启后自动恢复登录信息。（需在服务文件中显式设置 `Environment=HOME=/root`）
+配置数据存储在 `/root/.config/securelink/`，容器重启后自动恢复（需在服务文件中显式设置 `Environment=HOME=/root`）。
+
+## 项目结构
+
+```
+├── Dockerfile          # Arch Linux 版本
+├── Dockerfile.debian   # Debian 版本
+├── docker-compose.yml  # Compose 配置
+├── run.sh              # Podman 启动脚本
+├── services/           # 自定义 systemd 服务文件
+│   ├── securelink.service      # VPN 守护进程（覆盖 vendor 版本）
+│   ├── securelink_gui.service  # Electron GUI
+│   ├── xvfb.service            # 虚拟显示
+│   ├── fluxbox.service         # 窗口管理器
+│   ├── x11vnc.service          # VNC
+│   ├── xterm.service           # 终端
+│   └── gost.service            # 代理隧道
+└── securelink/         # 子模块 — PKGBUILD 和 .deb 打包
+    ├── PKGBUILD        # Arch 打包脚本
+    ├── .install        # Arch 安装钩子
+    ├── repack.sh       # .deb 重新打包脚本
+    ├── new-postinst    # 简化版 postinst
+    └── new-postrm      # 简化版 postrm
+```
 
 ## 镜像
 
