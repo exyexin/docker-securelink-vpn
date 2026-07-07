@@ -12,6 +12,7 @@ Environment=USER=root
 Environment=DISPLAY=:0
 ExecStart=/opt/SecureLink/securelink --no-sandbox
 ExecStop=/usr/bin/kill -HUP $MAINPID
+TimeoutStopSec=10
 #Restart = always
 #RestartSec = 10
 

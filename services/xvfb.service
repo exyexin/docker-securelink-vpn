@@ -23,10 +23,11 @@ ExecStart=/usr/bin/Xvfb :0 -screen 0 ${DISPLAY_WIDTH}x${DISPLAY_HEIGHT}x24 -list
 
 # --- 重启策略 ---
 # 对应 supervisor 的 autorestart=true
-Restart=always
+# on-failure: 只在异常退出时重启，正常停止时不重启（确保容器能正常关闭）
+Restart=on-failure
 # 重启间隔（防止无限快速重启）
 RestartSec=5
+TimeoutStopSec=10
 
 [Install]
 WantedBy=multi-user.target
-

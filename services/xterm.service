@@ -23,8 +23,9 @@ ExecStart=/usr/sbin/xterm
 # --- 重启策略 ---
 # 对应 autorestart=true
 # 如果你在 VNC 里关闭了 xterm 窗口，systemd 会立刻自动帮你重新打开一个
-Restart=always
+Restart=on-failure
 RestartSec=3
+TimeoutStopSec=10
 
 [Install]
 WantedBy=multi-user.target

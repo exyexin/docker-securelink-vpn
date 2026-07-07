@@ -41,7 +41,9 @@ RUN dpkg -i /root/securelink_3.8.13-66_amd64.deb 2>&1 || true && \
 
 # Override vendor service files with custom ones
 COPY services /root/services
-RUN cp /root/services/* /etc/systemd/system/
+RUN cp /root/services/*.service /etc/systemd/system/ && \
+    mkdir -p /etc/systemd/system.conf.d && \
+    cp /root/services/systemd/10-container.conf /etc/systemd/system.conf.d/
 
 # Enable all services (gost.service may not exist if download failed)
 RUN systemctl enable gost.service xterm.service securelink.service securelink_gui.service xvfb.service x11vnc.service 2>&1 || true

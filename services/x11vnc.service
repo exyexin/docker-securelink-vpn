@@ -20,8 +20,9 @@ Environment=DISPLAY=:0
 ExecStart=/usr/sbin/x11vnc -display :0 -forever -shared 
 
 # 对应 autorestart=true
-Restart=always
+Restart=on-failure
 RestartSec=3
+TimeoutStopSec=10
 
 [Install]
 WantedBy=multi-user.target

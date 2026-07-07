@@ -1,5 +1,7 @@
 podman run -it --name $1 \
 	--entrypoint /lib/systemd/systemd \
+	--stop-signal RTMIN+4 \
+	--stop-timeout 20 \
 	--cap-add SYS_ADMIN \
 	--cap-add NET_ADMIN \
 	--device /dev/net/tun \
