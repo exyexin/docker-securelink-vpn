@@ -1,0 +1,4 @@
+# 构建产物：由 securelink 子模块执行 `makepkg` 生成后再复制到仓库根目录，
+# 供 Dockerfile 的 COPY 使用。体积 128MB，不纳入版本控制。
+# 重新生成：cd securelink && makepkg && cp securelink-3.8.13_66-1-x86_64.pkg.tar.zst ..
+securelink-3.8.13_66-1-x86_64.pkg.tar.zst

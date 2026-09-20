@@ -1,12 +1,15 @@
 services:
   svpn:
-    image: exyexin/docker-securelink-vpn:latest
-    # Use one of the following for local builds:
-    # image: svpn:latest            # Arch Linux (Dockerfile)
-    # image: svpn-debian:latest     # Debian (Dockerfile.debian)
+    image: akumaexs/svpn-debian:latest
+    # 其他可选镜像（替换上面那行）：
+    # image: akumaexs/svpn-debian:3.8.13-66-supervisor  # Debian + supervisor（同 latest）
+    # image: akumaexs/svpn-debian:3.8.13-66-systemd     # Debian + systemd（旧世代）
+    # image: akumaexs/svpn:3.8.13-66-supervisor         # Arch + supervisor
+    # image: exyexin/docker-securelink-vpn:latest       # 上游发布版
+    # 本地构建：
+    # image: svpn-debian:3.8.13-66-supervisor
+    # image: svpn:3.8.13-66-supervisor
     container_name: svpn
-    entrypoint: /lib/systemd/systemd
-    stop_signal: RTMIN+4
     stop_grace_period: 20s
     cap_add:
       - SYS_ADMIN
@@ -14,7 +17,6 @@ services:
     devices:
       - /dev/net/tun:/dev/net/tun
     volumes:
-      - /sys/fs/cgroup/:/sys/fs/cgroup/:ro
       - svpn_config:/root/.config
       - svpn_data:/opt/SecureLink/resources/app.asar.unpacked/assets/app-ext/securelink_linux64/config
     ports:
@@ -25,7 +27,8 @@ services:
     environment:
       - HOME=/root
       - USER=root
-      - DISPLAY=:0.0
+      # 必须与镜像内 Xvfb 的 display 一致（supervisord.conf 固定用 :99）
+      - DISPLAY=:99.0
       - DISPLAY_WIDTH=1024
       - DISPLAY_HEIGHT=768
       - RUN_XTERM=yes

@@ -2,16 +2,12 @@ FROM debian:bookworm-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install systemd as PID 1
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends systemd systemd-sysv && \
-    rm -rf /var/lib/apt/lists/*
-
-# Install runtime dependencies
+# Install runtime dependencies (includes CA certs, supervisor, tini)
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     fluxbox x11vnc xterm xvfb \
     iproute2 lsb-release procps iptables wget curl \
+    ca-certificates openssl supervisor \
     fonts-wqy-microhei \
     at-spi2-core libcups2 libgtk-3-0 \
     libnotify4 libxtst6 libnss3 dmidecode libgbm1 \
@@ -28,6 +24,13 @@ RUN curl -sL --retry 3 --connect-timeout 10 \
     rm /tmp/gost.tar.gz || \
     echo "WARNING: gost download failed, skipping (proxy tunnel unavailable)"
 
+# Install tini (static binary, not in slim repos)
+RUN curl -sL --retry 3 --connect-timeout 10 \
+    -o /usr/bin/tini \
+    "https://github.com/krallin/tini/releases/download/v0.19.0/tini-static-amd64" && \
+    chmod +x /usr/bin/tini || \
+    echo "WARNING: tini download failed, supervisor will run as PID 1"
+
 # Symlink binary paths for compatibility with existing service files
 RUN ln -s /usr/bin/fluxbox /usr/sbin/fluxbox && \
     ln -s /usr/bin/x11vnc /usr/sbin/x11vnc && \
@@ -39,19 +42,13 @@ COPY securelink/securelink_3.8.13-66_amd64.deb /root/
 RUN dpkg -i /root/securelink_3.8.13-66_amd64.deb 2>&1 || true && \
     rm /root/securelink_3.8.13-66_amd64.deb
 
-# Override vendor service files with custom ones
-COPY services /root/services
-RUN cp /root/services/*.service /etc/systemd/system/ && \
-    mkdir -p /etc/systemd/system.conf.d && \
-    cp /root/services/systemd/10-container.conf /etc/systemd/system.conf.d/
-
-# Enable all services (gost.service may not exist if download failed)
-RUN systemctl enable gost.service xterm.service securelink.service securelink_gui.service xvfb.service x11vnc.service 2>&1 || true
+# Copy supervisor config
+COPY config/supervisord.conf /etc/supervisor.d/svpn.ini
 
 # Setup environment
 ENV HOME=/root \
     USER=root \
-    DISPLAY=:0.0 \
+    DISPLAY=:99.0 \
     DISPLAY_WIDTH=1024 \
     DISPLAY_HEIGHT=768 \
     RUN_XTERM=yes \
@@ -59,4 +56,4 @@ ENV HOME=/root \
 
 WORKDIR /root
 
-CMD ["/lib/systemd/systemd"]
+CMD ["tini", "-s", "--", "/usr/bin/supervisord", "-n", "-c", "/etc/supervisor.d/svpn.ini"]
