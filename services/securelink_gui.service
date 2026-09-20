@@ -1,0 +1,20 @@
+[Unit]
+Description=Start Svpn GUI
+Requires=fluxbox.service
+Requires=securelink.service
+After=fluxbox.service
+After=securelink.service
+
+[Service]
+Type=simple
+Environment=HOME=/root
+Environment=USER=root
+Environment=DISPLAY=:0
+ExecStart=/opt/SecureLink/securelink --no-sandbox
+ExecStop=/usr/bin/kill -HUP $MAINPID
+TimeoutStopSec=10
+#Restart = always
+#RestartSec = 10
+
+[Install]
+WantedBy = multi-user.target

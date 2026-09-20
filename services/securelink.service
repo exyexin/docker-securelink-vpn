@@ -1,0 +1,17 @@
+[Unit]
+Description=SecureLink Daemon
+After=network.target
+
+[Service]
+Type=simple
+Restart=on-failure
+Environment=HOME=/root
+Environment=USER=root
+Environment=DISPLAY=:0
+ExecStart=/opt/SecureLink/resources/app.asar.unpacked/assets/app-ext/securelink_linux64/bin/SecureLink_Client -d >/dev/null 2>&1
+ExecStop=/usr/bin/kill -HUP $MAINPID
+KillMode=process
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target
